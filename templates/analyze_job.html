@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze Job Posting - Job Application Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <i class="fas fa-search fa-2x text-primary me-3"></i>
+                <div>
+                    <h2 class="mb-0">Analyze Job Posting</h2>
+                    <p class="text-muted mb-0">Get AI-powered insights into job requirements and key skills</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-text me-2"></i>Job Posting Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="job_title" class="form-label">Job Title</label>
+                                <input type="text" class="form-control" id="job_title" name="job_title" 
+                                       placeholder="e.g., Senior Software Engineer" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="company_name" class="form-label">Company Name</label>
+                                <input type="text" class="form-control" id="company_name" name="company_name" 
+                                       placeholder="e.g., Tech Corporation" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="job_description" class="form-label">Job Description</label>
+                            <textarea class="form-control" id="job_description" name="job_description" 
+                                      rows="12" required 
+                                      placeholder="Paste the complete job posting here including:
+- Job description and responsibilities
+- Required qualifications and skills
+- Preferred qualifications
+- Company information
+- Benefits and perks"></textarea>
+                            <div class="form-text">
+                                Include as much detail as possible for better analysis
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Home
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-brain me-2"></i>Analyze with AI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>Tips for Better Analysis
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Include the complete job posting for comprehensive analysis</li>
+                        <li>Copy requirements, qualifications, and responsibilities sections</li>
+                        <li>Include company culture information if available</li>
+                        <li>Don't forget about preferred qualifications and nice-to-have skills</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

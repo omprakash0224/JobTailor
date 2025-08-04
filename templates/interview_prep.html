@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Preparation - Job Application Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <i class="fas fa-question-circle fa-2x text-warning me-3"></i>
+                <div>
+                    <h2 class="mb-0">Interview Preparation</h2>
+                    <p class="text-muted mb-0">Practice with AI-generated questions tailored to your target role</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>Select Position for Interview Prep
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if jobs %}
+                    <form method="POST" action="{{ url_for('process_interview_prep') }}">
+                        <div class="mb-4">
+                            <label for="job_id" class="form-label">Choose a job posting to prepare interview questions for:</label>
+                            <select class="form-select" id="job_id" name="job_id" required>
+                                <option value="">Select a job posting...</option>
+                                {% for job in jobs %}
+                                <option value="{{ job.id }}" 
+                                        {% if selected_job and selected_job.id == job.id %}selected{% endif %}>
+                                    {{ job.title }} at {{ job.company }} 
+                                    ({{ job.created_at.strftime('%m/%d/%Y') }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% if selected_job %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Interview Preparation For</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6><strong>{{ selected_job.title }}</strong> at {{ selected_job.company }}</h6>
+                                <p class="text-muted small mb-2">Added: {{ selected_job.created_at.strftime('%B %d, %Y') }}</p>
+                                <div class="description-preview">
+                                    <p class="mb-0">{{ selected_job.description[:300] }}{% if selected_job.description|length > 300 %}...{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{{ url_for('analyze_job') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Add New Job Posting
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-brain me-2"></i>Generate Interview Questions
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No Job Postings Found</h5>
+                        <p class="text-muted">You need to analyze a job posting first before preparing for interviews.</p>
+                        <a href="{{ url_for('analyze_job') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Analyze Your First Job Posting
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Interview Question Categories -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-list me-2 text-info"></i>Types of Questions Generated
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-code fa-2x text-primary mb-2"></i>
+                            <h6>Technical Questions</h6>
+                            <small class="text-muted">Role-specific technical skills, problem-solving scenarios, and tool knowledge</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-users fa-2x text-success mb-2"></i>
+                            <h6>Behavioral Questions</h6>
+                            <small class="text-muted">STAR method questions, teamwork, leadership, and conflict resolution</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-handshake fa-2x text-warning mb-2"></i>
+                            <h6>Culture Fit Questions</h6>
+                            <small class="text-muted">Motivation, company alignment, and career goals assessment</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interview Tips -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>Interview Preparation Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">Review the generated questions and prepare structured answers</li>
+                        <li class="mb-2">Practice the STAR method (Situation, Task, Action, Result) for behavioral questions</li>
+                        <li class="mb-2">Research the company culture and recent news</li>
+                        <li class="mb-2">Prepare specific examples from your experience for each skill area</li>
+                        <li class="mb-2">Practice technical concepts and be ready to explain them simply</li>
+                        <li>Prepare thoughtful questions to ask the interviewer</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

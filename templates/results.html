@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}{{ content_type }} Results - Job Application Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center">
+                    {% if content_type == 'Job Analysis' %}
+                    <i class="fas fa-search fa-2x text-primary me-3"></i>
+                    {% elif content_type == 'Resume Customization Suggestions' %}
+                    <i class="fas fa-file-alt fa-2x text-success me-3"></i>
+                    {% elif content_type == 'Cover Letter' %}
+                    <i class="fas fa-envelope fa-2x text-info me-3"></i>
+                    {% elif content_type == 'Interview Questions' %}
+                    <i class="fas fa-question-circle fa-2x text-warning me-3"></i>
+                    {% else %}
+                    <i class="fas fa-file fa-2x text-secondary me-3"></i>
+                    {% endif %}
+                    <div>
+                        <h2 class="mb-0">{{ content_type }}</h2>
+                        <p class="text-muted mb-0">AI-generated content ready for review</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if show_download %}
+                    <button onclick="downloadContent()" class="btn btn-success">
+                        <i class="fas fa-download me-2"></i>Download
+                    </button>
+                    {% endif %}
+                    <button onclick="copyToClipboard()" class="btn btn-outline-secondary">
+                        <i class="fas fa-copy me-2"></i>Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <!-- Generated Content -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-magic me-2"></i>Generated Content
+                    </h5>
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>Generated just now
+                    </small>
+                </div>
+                <div class="card-body">
+                    <div id="generated-content" class="content-display">
+                        {{ content|replace('\n', '<br>')|safe }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card mt-4">
+                <div class="card-body text-center">
+                    <h6 class="mb-3">What would you like to do next?</h6>
+                    <div class="row g-3">
+                        {% if content_type == 'Job Analysis' %}
+                        <div class="col-md-4">
+                            <a href="{{ url_for('customize_resume', job_id=job_id) }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-file-alt me-2"></i>Customize Resume
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('generate_cover_letter', job_id=job_id) }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-envelope me-2"></i>Generate Cover Letter
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('interview_prep', job_id=job_id) }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-question-circle me-2"></i>Interview Prep
+                            </a>
+                        </div>
+                        {% elif content_type == 'Resume Customization Suggestions' %}
+                        <div class="col-md-6">
+                            <a href="{{ url_for('generate_cover_letter', job_id=job_id) }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-envelope me-2"></i>Generate Cover Letter
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('interview_prep', job_id=job_id) }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-question-circle me-2"></i>Interview Prep
+                            </a>
+                        </div>
+                        {% elif content_type == 'Cover Letter' %}
+                        <div class="col-md-6">
+                            <a href="{{ url_for('customize_resume', job_id=job_id) }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-file-alt me-2"></i>Customize Resume
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('interview_prep', job_id=job_id) }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-question-circle me-2"></i>Interview Prep
+                            </a>
+                        </div>
+                        {% elif content_type == 'Interview Questions' %}
+                        <div class="col-md-6">
+                            <a href="{{ url_for('customize_resume', job_id=job_id) }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-file-alt me-2"></i>Customize Resume
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('generate_cover_letter', job_id=job_id) }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-envelope me-2"></i>Generate Cover Letter
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="{{ url_for('analyze_job') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-plus me-2"></i>Analyze New Job
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-home me-2"></i>Back to Home
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('profile') }}" class="btn btn-outline-dark w-100">
+                                <i class="fas fa-user me-2"></i>Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips for Using Content -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>Tips for Using This Content
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if content_type == 'Job Analysis' %}
+                    <ul class="mb-0">
+                        <li>Use the key skills list to tailor your resume and cover letter</li>
+                        <li>Focus on the main responsibilities when preparing interview answers</li>
+                        <li>Research the mentioned technologies and tools</li>
+                        <li>Align your experience examples with the identified requirements</li>
+                    </ul>
+                    {% elif content_type == 'Resume Customization Suggestions' %}
+                    <ul class="mb-0">
+                        <li>Implement the suggested keywords for better ATS compatibility</li>
+                        <li>Reorganize sections based on the priority recommendations</li>
+                        <li>Update your summary with the suggested improvements</li>
+                        <li>Quantify achievements where possible with specific metrics</li>
+                    </ul>
+                    {% elif content_type == 'Cover Letter' %}
+                    <ul class="mb-0">
+                        <li>Review and personalize the content before sending</li>
+                        <li>Verify all company and position details are accurate</li>
+                        <li>Save as a template for similar positions</li>
+                        <li>Consider the tone and adjust if needed for company culture</li>
+                    </ul>
+                    {% elif content_type == 'Interview Questions' %}
+                    <ul class="mb-0">
+                        <li>Practice answering each question using the STAR method</li>
+                        <li>Prepare specific examples from your experience</li>
+                        <li>Research the company for culture fit questions</li>
+                        <li>Practice technical explanations in simple terms</li>
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const content = document.getElementById('generated-content').innerText;
+    navigator.clipboard.writeText(content).then(function() {
+        // Show success feedback
+        const btn = document.querySelector('button[onclick="copyToClipboard()"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Failed to copy content to clipboard');
+    });
+}
+
+function downloadContent() {
+    const content = document.getElementById('generated-content').innerText;
+    const contentType = '{{ content_type }}';
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${contentType.replace(/\s+/g, '_').toLowerCase()}_${new Date().getTime()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+</script>
+{% endblock %}

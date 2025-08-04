@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Cover Letter - Job Application Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <i class="fas fa-envelope fa-2x text-info me-3"></i>
+                <div>
+                    <h2 class="mb-0">Generate Cover Letter</h2>
+                    <p class="text-muted mb-0">Create compelling, personalized cover letters for your applications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not profile %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Profile Required:</strong> Please create your profile first to generate personalized cover letters.
+                <a href="{{ url_for('profile') }}" class="btn btn-sm btn-outline-warning ms-2">Create Profile</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-briefcase me-2"></i>Select Job Position
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if jobs %}
+                    <form method="POST" action="{{ url_for('process_cover_letter') }}">
+                        <div class="mb-4">
+                            <label for="job_id" class="form-label">Choose a job posting to generate a cover letter for:</label>
+                            <select class="form-select" id="job_id" name="job_id" required>
+                                <option value="">Select a job posting...</option>
+                                {% for job in jobs %}
+                                <option value="{{ job.id }}" 
+                                        {% if selected_job and selected_job.id == job.id %}selected{% endif %}>
+                                    {{ job.title }} at {{ job.company }} 
+                                    ({{ job.created_at.strftime('%m/%d/%Y') }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% if selected_job %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Selected Position Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6><strong>{{ selected_job.title }}</strong> at {{ selected_job.company }}</h6>
+                                <p class="text-muted small mb-2">Added: {{ selected_job.created_at.strftime('%B %d, %Y') }}</p>
+                                <div class="description-preview">
+                                    <p class="mb-0">{{ selected_job.description[:300] }}{% if selected_job.description|length > 300 %}...{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{{ url_for('analyze_job') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Add New Job Posting
+                            </a>
+                            <button type="submit" class="btn btn-info" {% if not profile %}disabled{% endif %}>
+                                <i class="fas fa-pen-fancy me-2"></i>Generate Cover Letter
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No Job Postings Found</h5>
+                        <p class="text-muted">You need to analyze a job posting first before generating a cover letter.</p>
+                        <a href="{{ url_for('analyze_job') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Analyze Your First Job Posting
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if profile %}
+            <!-- Profile Preview -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Profile Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ profile.name }}</p>
+                            <p><strong>Email:</strong> {{ profile.email }}</p>
+                            {% if profile.phone %}
+                            <p><strong>Phone:</strong> {{ profile.phone }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if profile.summary %}
+                            <p><strong>Summary:</strong> {{ profile.summary[:100] }}{% if profile.summary|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{{ url_for('profile') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-edit me-1"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Cover Letter Features -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-star me-2 text-warning"></i>Cover Letter Features
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Personalized to job requirements</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Professional formatting</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Highlights relevant experience</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Company-specific customization</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>ATS-friendly format</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Downloadable text format</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
