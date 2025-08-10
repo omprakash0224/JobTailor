@@ -62,3 +62,10 @@ Preferred communication style: Simple, everyday language.
 - **SQLite**: Default for development and testing
 - **PostgreSQL**: Recommended for production (configurable via DATABASE_URL)
 - **Migration support**: SQLAlchemy's create_all() for schema initialization
+
+### Demo 
+
+
+
+https://github.com/user-attachments/assets/f17dfe40-65a8-466b-ab1d-c62bb7754bb7
+
