@@ -3,7 +3,11 @@ from app import app
 from models import JobPosting, UserProfile, GeneratedContent, db
 from gemini_service import JobAssistantService
 import io
+import os
 from datetime import datetime
+from werkzeug.utils import secure_filename
+import PyPDF2
+import docx
 
 @app.route('/')
 def index():
@@ -35,6 +39,120 @@ def profile():
     # GET request - show profile form
     profile = UserProfile.query.first()
     return render_template('index.html', profile=profile, show_profile=True)
+
+@app.route('/upload_resume', methods=['POST'])
+def upload_resume():
+    if 'resume_file' not in request.files:
+        flash('No file selected', 'error')
+        return redirect(url_for('profile'))
+    
+    file = request.files['resume_file']
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return redirect(url_for('profile'))
+    
+    if file and allowed_file(file.filename):
+        try:
+            # Extract text from uploaded file
+            text_content = extract_text_from_file(file)
+            
+            if not text_content.strip():
+                flash('Could not extract text from the resume file', 'error')
+                return redirect(url_for('profile'))
+            
+            # Parse resume with AI
+            parsed_data = JobAssistantService.parse_resume(text_content)
+            
+            # Get or create user profile
+            profile = UserProfile.query.first()
+            if not profile:
+                profile = UserProfile()
+            
+            # Update profile with parsed data
+            update_profile_from_parsed_data(profile, parsed_data)
+            
+            db.session.add(profile)
+            db.session.commit()
+            
+            flash('Resume uploaded and profile updated successfully!', 'success')
+            return redirect(url_for('profile'))
+            
+        except Exception as e:
+            flash(f'Error processing resume: {str(e)}', 'error')
+            return redirect(url_for('profile'))
+    else:
+        flash('Invalid file type. Please upload PDF, DOC, or DOCX files only.', 'error')
+        return redirect(url_for('profile'))
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def extract_text_from_file(file):
+    filename = file.filename.lower()
+    text_content = ""
+    
+    try:
+        if filename.endswith('.pdf'):
+            # Extract text from PDF
+            pdf_reader = PyPDF2.PdfReader(file)
+            for page in pdf_reader.pages:
+                text_content += page.extract_text() + "\n"
+                
+        elif filename.endswith('.docx'):
+            # Extract text from DOCX
+            doc = docx.Document(file)
+            for paragraph in doc.paragraphs:
+                text_content += paragraph.text + "\n"
+                
+        elif filename.endswith('.doc'):
+            # For .doc files, try to read as text (basic fallback)
+            text_content = file.read().decode('utf-8', errors='ignore')
+            
+        elif filename.endswith('.txt'):
+            # Extract text from TXT
+            text_content = file.read().decode('utf-8', errors='ignore')
+            
+    except Exception as e:
+        raise Exception(f"Error extracting text from file: {str(e)}")
+    
+    return text_content
+
+def update_profile_from_parsed_data(profile, parsed_data):
+    """Update profile fields from AI-parsed resume data"""
+    try:
+        # The parsed_data should contain structured information from the AI
+        # Extract individual components and update profile
+        lines = parsed_data.strip().split('\n')
+        current_section = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Detect sections
+            if line.upper().startswith('NAME:'):
+                profile.name = line.split(':', 1)[1].strip() or profile.name
+            elif line.upper().startswith('EMAIL:'):
+                profile.email = line.split(':', 1)[1].strip() or profile.email
+            elif line.upper().startswith('PHONE:'):
+                profile.phone = line.split(':', 1)[1].strip() or profile.phone
+            elif line.upper().startswith('SUMMARY:'):
+                profile.summary = line.split(':', 1)[1].strip() or profile.summary
+            elif line.upper().startswith('EXPERIENCE:'):
+                profile.experience = line.split(':', 1)[1].strip() or profile.experience
+            elif line.upper().startswith('EDUCATION:'):
+                profile.education = line.split(':', 1)[1].strip() or profile.education
+            elif line.upper().startswith('SKILLS:'):
+                profile.skills = line.split(':', 1)[1].strip() or profile.skills
+                
+        profile.updated_at = datetime.utcnow()
+        
+    except Exception as e:
+        # If parsing fails, just log and continue
+        print(f"Error updating profile from parsed data: {e}")
+        pass
 
 @app.route('/analyze_job', methods=['GET', 'POST'])
 def analyze_job():

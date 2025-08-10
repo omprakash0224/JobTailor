@@ -126,6 +126,45 @@ class JobAssistantService:
         except Exception as e:
             logging.error(f"Error generating cover letter: {e}")
             return f"Error generating cover letter: {str(e)}"
+        
+    @staticmethod
+    def parse_resume(resume_text):
+        """Parse resume text and extract structured information"""
+        try:
+            prompt = f"""
+            Parse the following resume text and extract key information in a structured format:
+            
+            Resume Text:
+            {resume_text}
+            
+            Please extract and format the information as follows:
+            
+            NAME: [Full name]
+            EMAIL: [Email address]
+            PHONE: [Phone number]
+            SUMMARY: [Professional summary or objective]
+            EXPERIENCE: [Work experience details]
+            EDUCATION: [Educational background]
+            SKILLS: [Technical and soft skills]
+            
+            Instructions:
+            - If any information is not found, leave the field empty after the colon
+            - For EXPERIENCE, include job titles, companies, dates, and key responsibilities
+            - For EDUCATION, include degrees, institutions, and graduation dates
+            - For SKILLS, list both technical and soft skills separated by commas
+            - Keep the format exactly as shown above with the field labels in UPPERCASE
+            """
+            
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            
+            return response.text if response.text else "Resume parsing failed"
+            
+        except Exception as e:
+            logging.error(f"Error parsing resume: {e}")
+            return f"Error parsing resume: {str(e)}"    
     
     @staticmethod
     def generate_interview_questions(job_description, position_title):

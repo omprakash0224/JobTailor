@@ -29,6 +29,36 @@
                     </h3>
                 </div>
                 <div class="card-body">
+                    <!-- Resume Upload Section -->
+                    <div class="mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-upload me-2"></i>Quick Setup: Upload Your Resume
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">Upload your resume to automatically fill in your profile information using AI.</p>
+                                <form method="POST" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data" class="mb-0">
+                                    <div class="row align-items-end">
+                                        <div class="col-md-8 mb-2">
+                                            <input type="file" class="form-control" id="resume_file" name="resume_file" 
+                                                   accept=".pdf,.doc,.docx,.txt" required>
+                                            <div class="form-text">Accepted formats: PDF, DOC, DOCX, TXT (Max 10MB)</div>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-magic me-2"></i>Parse Resume
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Profile Form -->
+                    <h6 class="text-muted mb-3">Or fill in your information manually:</h6>
                     <form method="POST" action="{{ url_for('profile') }}">
                         <div class="row">
                             <div class="col-md-6 mb-3">

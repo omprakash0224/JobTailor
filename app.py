@@ -23,6 +23,9 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
 }
 
+# Configure file uploads
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
+
 # Initialize SQLAlchemy
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
