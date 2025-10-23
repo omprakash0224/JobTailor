@@ -1,13 +1,16 @@
 from flask import render_template, request, redirect, url_for, flash, session, make_response
-from app import app
-from models import JobPosting, UserProfile, GeneratedContent, db
+from app import app, db
+from models import JobPosting, UserProfile, GeneratedContent
 from gemini_service import JobAssistantService
-import io
-import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
-import PyPDF2
-import docx
+import logging
+import os
+import json
+import io
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/')
 def index():
@@ -16,143 +19,165 @@ def index():
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
     if request.method == 'POST':
-        # Get or create user profile
         profile = UserProfile.query.first()
         if not profile:
-            profile = UserProfile()
+            profile = UserProfile(
+                name=request.form.get('name'),
+                email=request.form.get('email'),
+                phone=request.form.get('phone'),
+                summary=request.form.get('summary'),
+                experience=request.form.get('experience'),
+                education=request.form.get('education'),
+                skills=request.form.get('skills'),
+                projects=request.form.get('projects'),
+                certifications=request.form.get('certifications')
+            )
+            db.session.add(profile)
+        else:
+            profile.name = request.form.get('name')
+            profile.email = request.form.get('email')
+            profile.phone = request.form.get('phone')
+            profile.summary = request.form.get('summary')
+            profile.experience = request.form.get('experience')
+            profile.education = request.form.get('education')
+            profile.skills = request.form.get('skills')
+            profile.projects = request.form.get('projects')
+            profile.certifications = request.form.get('certifications')
         
-        profile.name = request.form.get('name', '')
-        profile.email = request.form.get('email', '')
-        profile.phone = request.form.get('phone', '')
-        profile.summary = request.form.get('summary', '')
-        profile.experience = request.form.get('experience', '')
-        profile.education = request.form.get('education', '')
-        profile.skills = request.form.get('skills', '')
-        profile.updated_at = datetime.utcnow()
-        
-        db.session.add(profile)
         db.session.commit()
-        
         flash('Profile updated successfully!', 'success')
-        return redirect(url_for('index'))
+        return redirect(url_for('profile'))
     
-    # GET request - show profile form
     profile = UserProfile.query.first()
-    return render_template('index.html', profile=profile, show_profile=True)
+    return render_template('profile.html', profile=profile)
 
 @app.route('/upload_resume', methods=['POST'])
 def upload_resume():
     if 'resume_file' not in request.files:
-        flash('No file selected', 'error')
+        flash('No file uploaded', 'error')
         return redirect(url_for('profile'))
     
     file = request.files['resume_file']
+    
     if file.filename == '':
         flash('No file selected', 'error')
         return redirect(url_for('profile'))
     
     if file and allowed_file(file.filename):
         try:
-            # Extract text from uploaded file
+            # Extract text from file
             text_content = extract_text_from_file(file)
             
-            if not text_content.strip():
-                flash('Could not extract text from the resume file', 'error')
+            if not text_content:
+                flash('Could not extract text from file', 'error')
                 return redirect(url_for('profile'))
             
-            # Parse resume with AI
+            # Use AI to parse resume
             parsed_data = JobAssistantService.parse_resume(text_content)
             
-            # Get or create user profile
+            # Update or create profile
             profile = UserProfile.query.first()
             if not profile:
-                profile = UserProfile()
+                profile = UserProfile(
+                    name=parsed_data.get('name', ''),
+                    email=parsed_data.get('email', ''),
+                    phone=parsed_data.get('phone', ''),
+                    summary=parsed_data.get('summary', ''),
+                    experience=parsed_data.get('experience', ''),
+                    education=parsed_data.get('education', ''),
+                    skills=parsed_data.get('skills', ''),
+                    projects=parsed_data.get('projects', ''),
+                    certifications=parsed_data.get('certifications', '')
+                )
+                db.session.add(profile)
+            else:
+                update_profile_from_parsed_data(profile, parsed_data)
             
-            # Update profile with parsed data
-            update_profile_from_parsed_data(profile, parsed_data)
-            
-            db.session.add(profile)
             db.session.commit()
-            
-            flash('Resume uploaded and profile updated successfully!', 'success')
-            return redirect(url_for('profile'))
+            flash('Resume parsed and profile updated successfully!', 'success')
             
         except Exception as e:
+            logging.error(f"Error processing resume: {e}")
             flash(f'Error processing resume: {str(e)}', 'error')
-            return redirect(url_for('profile'))
     else:
-        flash('Invalid file type. Please upload PDF, DOC, or DOCX files only.', 'error')
-        return redirect(url_for('profile'))
+        flash('Invalid file type. Please upload PDF, DOC, DOCX, or TXT', 'error')
+    
+    return redirect(url_for('profile'))
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def extract_text_from_file(file):
+    """Extract text from uploaded file"""
     filename = file.filename.lower()
     text_content = ""
     
     try:
-        if filename.endswith('.pdf'):
-            # Extract text from PDF
+        if filename.endswith('.txt'):
+            text_content = file.read().decode('utf-8')
+        elif filename.endswith('.pdf'):
+            # You'll need to install PyPDF2: pip install PyPDF2
+            import PyPDF2
             pdf_reader = PyPDF2.PdfReader(file)
             for page in pdf_reader.pages:
-                text_content += page.extract_text() + "\n"
-                
-        elif filename.endswith('.docx'):
-            # Extract text from DOCX
+                text_content += page.extract_text()
+        elif filename.endswith(('.doc', '.docx')):
+            # You'll need to install python-docx: pip install python-docx
+            import docx
             doc = docx.Document(file)
-            for paragraph in doc.paragraphs:
-                text_content += paragraph.text + "\n"
-                
-        elif filename.endswith('.doc'):
-            # For .doc files, try to read as text (basic fallback)
-            text_content = file.read().decode('utf-8', errors='ignore')
-            
-        elif filename.endswith('.txt'):
-            # Extract text from TXT
-            text_content = file.read().decode('utf-8', errors='ignore')
-            
+            text_content = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
     except Exception as e:
-        raise Exception(f"Error extracting text from file: {str(e)}")
+        logging.error(f"Error extracting text from file: {e}")
+        return ""
     
     return text_content
 
 def update_profile_from_parsed_data(profile, parsed_data):
     """Update profile fields from AI-parsed resume data"""
     try:
-        # The parsed_data should contain structured information from the AI
-        # Extract individual components and update profile
-        lines = parsed_data.strip().split('\n')
-        current_section = None
+        profile.name = parsed_data.get('name', profile.name)
+        profile.email = parsed_data.get('email', profile.email)
+        profile.phone = parsed_data.get('phone', profile.phone)
+        profile.summary = parsed_data.get('summary', profile.summary)
         
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            # Detect sections
-            if line.upper().startswith('NAME:'):
-                profile.name = line.split(':', 1)[1].strip() or profile.name
-            elif line.upper().startswith('EMAIL:'):
-                profile.email = line.split(':', 1)[1].strip() or profile.email
-            elif line.upper().startswith('PHONE:'):
-                profile.phone = line.split(':', 1)[1].strip() or profile.phone
-            elif line.upper().startswith('SUMMARY:'):
-                profile.summary = line.split(':', 1)[1].strip() or profile.summary
-            elif line.upper().startswith('EXPERIENCE:'):
-                profile.experience = line.split(':', 1)[1].strip() or profile.experience
-            elif line.upper().startswith('EDUCATION:'):
-                profile.education = line.split(':', 1)[1].strip() or profile.education
-            elif line.upper().startswith('SKILLS:'):
-                profile.skills = line.split(':', 1)[1].strip() or profile.skills
-                
-        profile.updated_at = datetime.utcnow()
+        # Handle experience - convert to string if it's a dict/list
+        experience = parsed_data.get('experience', profile.experience)
+        if isinstance(experience, (dict, list)):
+            profile.experience = json.dumps(experience, indent=2)
+        else:
+            profile.experience = experience
         
+        # Handle education - convert to string if it's a dict/list
+        education = parsed_data.get('education', profile.education)
+        if isinstance(education, (dict, list)):
+            profile.education = json.dumps(education, indent=2)
+        else:
+            profile.education = education
+        
+        # Handle skills - convert to string if it's a dict/list
+        skills = parsed_data.get('skills', profile.skills)
+        if isinstance(skills, (dict, list)):
+            profile.skills = json.dumps(skills, indent=2)
+        else:
+            profile.skills = skills
+        
+        # Handle projects - convert to string if it's a dict/list
+        projects = parsed_data.get('projects', profile.projects)
+        if isinstance(projects, (dict, list)):
+            profile.projects = json.dumps(projects, indent=2)
+        else:
+            profile.projects = projects
+        
+        # Handle certifications - convert to string if it's a dict/list
+        certifications = parsed_data.get('certifications', profile.certifications)
+        if isinstance(certifications, (dict, list)):
+            profile.certifications = json.dumps(certifications, indent=2)
+        else:
+            profile.certifications = certifications
     except Exception as e:
-        # If parsing fails, just log and continue
-        print(f"Error updating profile from parsed data: {e}")
-        pass
+        logging.error(f"Error updating profile: {e}")
+        raise
 
 @app.route('/analyze_job', methods=['GET', 'POST'])
 def analyze_job():
@@ -337,15 +362,20 @@ def process_interview_prep():
         return redirect(url_for('interview_prep'))
     
     job_posting = JobPosting.query.get(job_id)
+    profile = UserProfile.query.first()  # Get the user profile
     
     if not job_posting:
         flash('Job posting not found.', 'error')
         return redirect(url_for('interview_prep'))
     
+    if not profile:
+        flash('Please create your profile first.', 'error')
+        return redirect(url_for('profile'))
+    
     try:
         questions = JobAssistantService.generate_interview_questions(
             job_posting.description,
-            job_posting.title
+            profile  # Pass the profile object, not job_posting.title
         )
         
         # Save interview questions
@@ -353,6 +383,7 @@ def process_interview_prep():
         content.content_type = 'interview_questions'
         content.content = questions
         content.job_posting_id = job_posting.id
+        content.user_profile_id = profile.id  # Also link to user profile
         db.session.add(content)
         db.session.commit()
         

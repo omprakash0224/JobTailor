@@ -23,6 +23,8 @@ class UserProfile(db.Model):
     experience = db.Column(db.Text)
     education = db.Column(db.Text)
     skills = db.Column(db.Text)
+    projects = db.Column(db.Text)  # New field
+    certifications = db.Column(db.Text)  # New field
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

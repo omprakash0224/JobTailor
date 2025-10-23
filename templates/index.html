@@ -38,7 +38,7 @@
                                 </h6>
                             </div>
                             <div class="card-body">
-                                <p class="text-muted mb-3">Upload your resume to automatically fill in your profile information using AI.</p>
+                                <p class="text-muted mb-3">Upload your resume to automatically extract all information including projects and certifications using AI.</p>
                                 <form method="POST" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data" class="mb-0">
                                     <div class="row align-items-end">
                                         <div class="col-md-8 mb-2">
@@ -80,24 +80,48 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="summary" class="form-label">Professional Summary</label>
+                            <label for="summary" class="form-label">
+                                <i class="fas fa-user-tie me-1"></i>Professional Summary
+                            </label>
                             <textarea class="form-control" id="summary" name="summary" rows="3" 
                                       placeholder="Brief professional summary...">{{ profile.summary if profile else '' }}</textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="experience" class="form-label">Work Experience</label>
+                            <label for="experience" class="form-label">
+                                <i class="fas fa-briefcase me-1"></i>Work Experience
+                            </label>
                             <textarea class="form-control" id="experience" name="experience" rows="5" 
-                                      placeholder="List your work experience...">{{ profile.experience if profile else '' }}</textarea>
+                                      placeholder="List your work experience with job titles, companies, dates, and responsibilities...">{{ profile.experience if profile else '' }}</textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="education" class="form-label">Education</label>
+                            <label for="education" class="form-label">
+                                <i class="fas fa-graduation-cap me-1"></i>Education
+                            </label>
                             <textarea class="form-control" id="education" name="education" rows="3" 
-                                      placeholder="Educational background...">{{ profile.education if profile else '' }}</textarea>
+                                      placeholder="Degrees, institutions, graduation dates...">{{ profile.education if profile else '' }}</textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="skills" class="form-label">Skills</label>
+                            <label for="skills" class="form-label">
+                                <i class="fas fa-code me-1"></i>Skills
+                            </label>
                             <textarea class="form-control" id="skills" name="skills" rows="3" 
-                                      placeholder="Technical and soft skills...">{{ profile.skills if profile else '' }}</textarea>
+                                      placeholder="Technical skills, programming languages, tools, soft skills...">{{ profile.skills if profile else '' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="projects" class="form-label">
+                                <i class="fas fa-project-diagram me-1"></i>Projects
+                            </label>
+                            <textarea class="form-control" id="projects" name="projects" rows="4" 
+                                      placeholder="Project name, description, technologies used, your role, and key achievements...">{{ profile.projects if profile else '' }}</textarea>
+                            <div class="form-text">Include personal, academic, or professional projects that demonstrate your skills</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="certifications" class="form-label">
+                                <i class="fas fa-certificate me-1"></i>Certifications
+                            </label>
+                            <textarea class="form-control" id="certifications" name="certifications" rows="3" 
+                                      placeholder="Certification name, issuing organization, date obtained, expiration date (if any)...">{{ profile.certifications if profile else '' }}</textarea>
+                            <div class="form-text">List any relevant professional certifications or licenses</div>
                         </div>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-2"></i>Save Profile
@@ -118,7 +142,7 @@
                     <i class="fas fa-search fa-3x text-primary mb-3"></i>
                     <h5 class="card-title">Analyze Job Posting</h5>
                     <p class="card-text">
-                        Get detailed insights into job requirements and key skills needed.
+                        Get detailed insights into job requirements, skills, and relevant certifications.
                     </p>
                     <a href="{{ url_for('analyze_job') }}" class="btn btn-outline-primary">
                         Start Analysis
@@ -134,7 +158,7 @@
                     <i class="fas fa-file-alt fa-3x text-success mb-3"></i>
                     <h5 class="card-title">Customize Resume</h5>
                     <p class="card-text">
-                        Get AI-powered suggestions to tailor your resume for specific roles.
+                        Tailor your resume with relevant projects and certifications for specific roles.
                     </p>
                     <a href="{{ url_for('customize_resume') }}" class="btn btn-outline-success">
                         Customize Now
@@ -150,7 +174,7 @@
                     <i class="fas fa-envelope fa-3x text-info mb-3"></i>
                     <h5 class="card-title">Generate Cover Letter</h5>
                     <p class="card-text">
-                        Create compelling, personalized cover letters for your applications.
+                        Create personalized cover letters highlighting your projects and achievements.
                     </p>
                     <a href="{{ url_for('generate_cover_letter') }}" class="btn btn-outline-info">
                         Generate Letter
@@ -166,7 +190,7 @@
                     <i class="fas fa-question-circle fa-3x text-warning mb-3"></i>
                     <h5 class="card-title">Interview Preparation</h5>
                     <p class="card-text">
-                        Practice with AI-generated questions tailored to your target role.
+                        Practice with questions about your projects, certifications, and technical skills.
                     </p>
                     <a href="{{ url_for('interview_prep') }}" class="btn btn-outline-warning">
                         Prepare Now
@@ -200,6 +224,12 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>Last Updated:</strong> {{ profile.updated_at.strftime('%B %d, %Y') }}</p>
+                            {% if profile.projects %}
+                            <p><strong>Projects:</strong> <span class="badge bg-success">Added</span></p>
+                            {% endif %}
+                            {% if profile.certifications %}
+                            <p><strong>Certifications:</strong> <span class="badge bg-info">Added</span></p>
+                            {% endif %}
                         </div>
                     </div>
                     {% if profile.summary %}
@@ -208,6 +238,30 @@
                         <p class="text-muted">{{ profile.summary[:200] }}{% if profile.summary|length > 200 %}...{% endif %}</p>
                     </div>
                     {% endif %}
+                    
+                    <!-- Quick Stats -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="d-flex gap-3 flex-wrap">
+                                <div>
+                                    <i class="fas fa-briefcase text-primary me-1"></i>
+                                    <small class="text-muted">Experience: {% if profile.experience %}Available{% else %}Not Set{% endif %}</small>
+                                </div>
+                                <div>
+                                    <i class="fas fa-code text-success me-1"></i>
+                                    <small class="text-muted">Skills: {% if profile.skills %}Available{% else %}Not Set{% endif %}</small>
+                                </div>
+                                <div>
+                                    <i class="fas fa-project-diagram text-info me-1"></i>
+                                    <small class="text-muted">Projects: {% if profile.projects %}Available{% else %}Not Set{% endif %}</small>
+                                </div>
+                                <div>
+                                    <i class="fas fa-certificate text-warning me-1"></i>
+                                    <small class="text-muted">Certifications: {% if profile.certifications %}Available{% else %}Not Set{% endif %}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

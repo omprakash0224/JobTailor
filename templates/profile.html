@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-user-circle me-2"></i>Your Profile
+                </h2>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Home
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card me-2"></i>Profile Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Resume Upload Section -->
+                    <div class="mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-upload me-2"></i>Upload Resume to Auto-Fill
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">
+                                    Upload your resume to automatically extract information including projects and certifications using AI.
+                                </p>
+                                <form method="POST" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data" class="mb-0">
+                                    <div class="row align-items-end">
+                                        <div class="col-md-8 mb-2">
+                                            <input type="file" class="form-control" id="resume_file" name="resume_file" 
+                                                   accept=".pdf,.doc,.docx,.txt" required>
+                                            <div class="form-text">Accepted formats: PDF, DOC, DOCX, TXT (Max 10MB)</div>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-magic me-2"></i>Parse Resume
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Form -->
+                    <form method="POST" action="{{ url_for('profile') }}">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-user me-2"></i>Basic Information
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ profile.name if profile else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ profile.email if profile else '' }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ profile.phone if profile else '' }}"
+                                       placeholder="+1 (555) 123-4567">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-briefcase me-2"></i>Professional Information
+                        </h6>
+
+                        <div class="mb-3">
+                            <label for="summary" class="form-label">
+                                <i class="fas fa-user-tie me-1"></i>Professional Summary
+                            </label>
+                            <textarea class="form-control" id="summary" name="summary" rows="4" 
+                                      placeholder="A brief professional summary highlighting your expertise and career goals...">{{ profile.summary if profile else '' }}</textarea>
+                            <div class="form-text">2-3 sentences describing your professional background</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="experience" class="form-label">
+                                <i class="fas fa-briefcase me-1"></i>Work Experience
+                            </label>
+                            <textarea class="form-control" id="experience" name="experience" rows="6" 
+                                      placeholder="Job Title | Company Name | Start Date - End Date&#10;• Key responsibility or achievement&#10;• Key responsibility or achievement&#10;&#10;Job Title | Company Name | Start Date - End Date&#10;• Key responsibility or achievement">{{ profile.experience if profile else '' }}</textarea>
+                            <div class="form-text">List your work experience with job titles, companies, dates, and key responsibilities</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="education" class="form-label">
+                                <i class="fas fa-graduation-cap me-1"></i>Education
+                            </label>
+                            <textarea class="form-control" id="education" name="education" rows="4" 
+                                      placeholder="Degree | University Name | Graduation Year&#10;GPA: X.XX (if relevant)&#10;Relevant coursework: ...">{{ profile.education if profile else '' }}</textarea>
+                            <div class="form-text">Degrees, institutions, graduation dates, and relevant coursework</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="skills" class="form-label">
+                                <i class="fas fa-code me-1"></i>Skills
+                            </label>
+                            <textarea class="form-control" id="skills" name="skills" rows="4" 
+                                      placeholder="Technical Skills: Python, JavaScript, SQL, Docker, AWS&#10;Tools: Git, VS Code, Jira&#10;Soft Skills: Team leadership, Problem-solving, Communication">{{ profile.skills if profile else '' }}</textarea>
+                            <div class="form-text">Technical skills, programming languages, tools, frameworks, and soft skills</div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-star me-2"></i>Additional Qualifications
+                        </h6>
+
+                        <div class="mb-3">
+                            <label for="projects" class="form-label">
+                                <i class="fas fa-project-diagram me-1"></i>Projects
+                            </label>
+                            <textarea class="form-control" id="projects" name="projects" rows="6" 
+                                      placeholder="Project Name | Role&#10;Brief description of the project and its purpose&#10;Technologies: Python, Flask, PostgreSQL&#10;• Key achievement or feature implemented&#10;• Impact or results (e.g., improved performance by 30%)&#10;&#10;Another Project Name | Role&#10;...">{{ profile.projects if profile else '' }}</textarea>
+                            <div class="form-text">Include personal, academic, or professional projects with descriptions, technologies used, your role, and key achievements</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="certifications" class="form-label">
+                                <i class="fas fa-certificate me-1"></i>Certifications
+                            </label>
+                            <textarea class="form-control" id="certifications" name="certifications" rows="5" 
+                                      placeholder="Certification Name | Issuing Organization | Date Obtained&#10;Expiration: Date (if applicable)&#10;Credential ID: XXXXX (if applicable)&#10;&#10;Another Certification | Organization | Date&#10;...">{{ profile.certifications if profile else '' }}</textarea>
+                            <div class="form-text">List professional certifications, licenses, or credentials with issuing organizations and dates</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div>
+                                {% if profile %}
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Last updated: {{ profile.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-2">
+                                    Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Profile
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if profile %}
+            <!-- Profile Completeness Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Profile Completeness
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <div class="text-center">
+                                <i class="fas fa-user fa-2x {% if profile.name and profile.email %}text-success{% else %}text-muted{% endif %}"></i>
+                                <p class="mb-0 mt-2"><small>Basic Info</small></p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="text-center">
+                                <i class="fas fa-briefcase fa-2x {% if profile.experience and profile.skills %}text-success{% else %}text-muted{% endif %}"></i>
+                                <p class="mb-0 mt-2"><small>Experience</small></p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="text-center">
+                                <i class="fas fa-project-diagram fa-2x {% if profile.projects %}text-success{% else %}text-muted{% endif %}"></i>
+                                <p class="mb-0 mt-2"><small>Projects</small></p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="text-center">
+                                <i class="fas fa-certificate fa-2x {% if profile.certifications %}text-success{% else %}text-muted{% endif %}"></i>
+                                <p class="mb-0 mt-2"><small>Certifications</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
