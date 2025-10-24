@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-plus-circle me-2"></i>Add Job Application</h2>
+                <a href="{{ url_for('applications') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Applications
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_application') }}">
+                        <!-- Job Selection -->
+                        <h5 class="mb-3"><i class="fas fa-briefcase me-2"></i>Job Information</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Select Existing Job or Enter New</label>
+                            <select class="form-select" id="job_selector" onchange="toggleJobFields()">
+                                <option value="new">Enter New Job Details</option>
+                                {% for job in jobs %}
+                                <option value="{{ job.id }}">{{ job.title }} - {{ job.company }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="job_id" id="job_id">
+                        </div>
+
+                        <div id="new_job_fields">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="job_title" class="form-label">Job Title *</label>
+                                    <input type="text" class="form-control" id="job_title" name="job_title" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="company" class="form-label">Company Name *</label>
+                                    <input type="text" class="form-control" id="company" name="company" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="job_description" class="form-label">Job Description</label>
+                                <textarea class="form-control" id="job_description" name="job_description" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Application Details -->
+                        <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Application Details</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="Applied" selected>Applied</option>
+                                    <option value="Phone Screen">Phone Screen</option>
+                                    <option value="Interview">Interview</option>
+                                    <option value="Technical Round">Technical Round</option>
+                                    <option value="Final Round">Final Round</option>
+                                    <option value="Offer">Offer</option>
+                                    <option value="Accepted">Accepted</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Withdrawn">Withdrawn</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="application_date" class="form-label">Application Date</label>
+                                <input type="date" class="form-control" id="application_date" name="application_date" 
+                                       value="{{ datetime.now().strftime('%Y-%m-%d') }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       placeholder="City, State or Remote">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="job_type" class="form-label">Job Type</label>
+                                <select class="form-select" id="job_type" name="job_type">
+                                    <option value="">Select...</option>
+                                    <option value="Full-time">Full-time</option>
+                                    <option value="Part-time">Part-time</option>
+                                    <option value="Contract">Contract</option>
+                                    <option value="Internship">Internship</option>
+                                    <option value="Remote">Remote</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="salary_range" class="form-label">Salary Range</label>
+                                <input type="text" class="form-control" id="salary_range" name="salary_range" 
+                                       placeholder="e.g., $80,000 - $100,000">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="job_url" class="form-label">Job Posting URL</label>
+                                <input type="url" class="form-control" id="job_url" name="job_url" 
+                                       placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Contact & Follow-up -->
+                        <h5 class="mb-3"><i class="fas fa-user-tie me-2"></i>Contact & Follow-up</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_person" class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="contact_person" name="contact_person" 
+                                       placeholder="Recruiter or Hiring Manager">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_email" class="form-label">Contact Email</label>
+                                <input type="email" class="form-control" id="contact_email" name="contact_email">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="follow_up_date" class="form-label">Follow-up Date</label>
+                            <input type="date" class="form-control" id="follow_up_date" name="follow_up_date">
+                            <div class="form-text">Set a reminder to follow up on this application</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                      placeholder="Any additional notes about this application..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ url_for('applications') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleJobFields() {
+    const selector = document.getElementById('job_selector');
+    const newJobFields = document.getElementById('new_job_fields');
+    const jobIdField = document.getElementById('job_id');
+    const jobTitleField = document.getElementById('job_title');
+    const companyField = document.getElementById('company');
+    
+    if (selector.value === 'new') {
+        newJobFields.style.display = 'block';
+        jobIdField.value = '';
+        jobTitleField.required = true;
+        companyField.required = true;
+    } else {
+        newJobFields.style.display = 'none';
+        jobIdField.value = selector.value;
+        jobTitleField.required = false;
+        companyField.required = false;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleJobFields();
+});
+</script>
+{% endblock %}

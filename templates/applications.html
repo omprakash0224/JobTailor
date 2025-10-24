@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tasks me-2"></i>Application Tracker</h2>
+        <a href="{{ url_for('add_application') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Application
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-paper-plane fa-2x text-primary mb-2"></i>
+                    <h3 class="mb-0">{{ total_apps }}</h3>
+                    <p class="text-muted mb-0">Total Applications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
+                    <h3 class="mb-0">{{ active_apps }}</h3>
+                    <p class="text-muted mb-0">Active Applications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-trophy fa-2x text-success mb-2"></i>
+                    <h3 class="mb-0">{{ offers }}</h3>
+                    <p class="text-muted mb-0">Offers Received</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('applications') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Filter by Status</label>
+                    <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                        <option value="Applied" {% if status_filter == 'Applied' %}selected{% endif %}>Applied</option>
+                        <option value="Phone Screen" {% if status_filter == 'Phone Screen' %}selected{% endif %}>Phone Screen</option>
+                        <option value="Interview" {% if status_filter == 'Interview' %}selected{% endif %}>Interview</option>
+                        <option value="Technical Round" {% if status_filter == 'Technical Round' %}selected{% endif %}>Technical Round</option>
+                        <option value="Final Round" {% if status_filter == 'Final Round' %}selected{% endif %}>Final Round</option>
+                        <option value="Offer" {% if status_filter == 'Offer' %}selected{% endif %}>Offer</option>
+                        <option value="Accepted" {% if status_filter == 'Accepted' %}selected{% endif %}>Accepted</option>
+                        <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="Withdrawn" {% if status_filter == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select name="sort" id="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>Date (Newest First)</option>
+                        <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Date (Oldest First)</option>
+                        <option value="company" {% if sort_by == 'company' %}selected{% endif %}>Company Name</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Applications List -->
+    {% if applications %}
+    <div class="row">
+        {% for app in applications %}
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="card-title mb-1">
+                                <a href="{{ url_for('view_application', app_id=app.id) }}" class="text-decoration-none">
+                                    {{ app.job_posting.title }}
+                                </a>
+                            </h5>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-building me-2"></i>{{ app.job_posting.company }}
+                                {% if app.location %}
+                                <i class="fas fa-map-marker-alt ms-3 me-2"></i>{{ app.location }}
+                                {% endif %}
+                                {% if app.job_type %}
+                                <i class="fas fa-briefcase ms-3 me-2"></i>{{ app.job_type }}
+                                {% endif %}
+                            </p>
+                            {% if app.salary_range %}
+                            <p class="mb-2">
+                                <i class="fas fa-dollar-sign me-2"></i>{{ app.salary_range }}
+                            </p>
+                            {% endif %}
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                Applied: {{ app.application_date.strftime('%b %d, %Y') }}
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge bg-{{ app.status_color }} mb-2">{{ app.status }}</span>
+                            <div class="btn-group d-block mt-2">
+                                <a href="{{ url_for('view_application', app_id=app.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{{ url_for('edit_application', app_id=app.id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </div>
+                            {% if app.follow_up_date %}
+                            <div class="mt-2">
+                                <small class="text-warning">
+                                    <i class="fas fa-bell me-1"></i>
+                                    Follow-up: {{ app.follow_up_date.strftime('%b %d') }}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h5>No Applications Found</h5>
+            <p class="text-muted mb-3">Start tracking your job applications to stay organized!</p>
+            <a href="{{ url_for('add_application') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add Your First Application
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -30,6 +30,12 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
+# Make datetime available in all templates
+@app.context_processor
+def inject_datetime():
+    from datetime import datetime
+    return {'datetime': datetime}
+
 # Create database tables
 with app.app_context():
     from models import JobPosting, UserProfile, GeneratedContent

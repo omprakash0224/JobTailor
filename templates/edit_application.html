@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-edit me-2"></i>Edit Application</h2>
+                <a href="{{ url_for('view_application', app_id=application.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('edit_application', app_id=application.id) }}">
+                        <!-- Job Information -->
+                        <h5 class="mb-3"><i class="fas fa-briefcase me-2"></i>Job Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="job_title" class="form-label">Job Title *</label>
+                                <input type="text" class="form-control" id="job_title" name="job_title" 
+                                       value="{{ application.job_posting.title }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="company" class="form-label">Company Name *</label>
+                                <input type="text" class="form-control" id="company" name="company" 
+                                       value="{{ application.job_posting.company }}" required>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Application Details -->
+                        <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Application Details</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="Applied" {% if application.status == 'Applied' %}selected{% endif %}>Applied</option>
+                                    <option value="Phone Screen" {% if application.status == 'Phone Screen' %}selected{% endif %}>Phone Screen</option>
+                                    <option value="Interview" {% if application.status == 'Interview' %}selected{% endif %}>Interview</option>
+                                    <option value="Technical Round" {% if application.status == 'Technical Round' %}selected{% endif %}>Technical Round</option>
+                                    <option value="Final Round" {% if application.status == 'Final Round' %}selected{% endif %}>Final Round</option>
+                                    <option value="Offer" {% if application.status == 'Offer' %}selected{% endif %}>Offer</option>
+                                    <option value="Accepted" {% if application.status == 'Accepted' %}selected{% endif %}>Accepted</option>
+                                    <option value="Rejected" {% if application.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                    <option value="Withdrawn" {% if application.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="application_date" class="form-label">Application Date</label>
+                                <input type="date" class="form-control" id="application_date" name="application_date" 
+                                       value="{{ application.application_date.strftime('%Y-%m-%d') }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       value="{{ application.location or '' }}" placeholder="City, State or Remote">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="job_type" class="form-label">Job Type</label>
+                                <select class="form-select" id="job_type" name="job_type">
+                                    <option value="">Select...</option>
+                                    <option value="Full-time" {% if application.job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                                    <option value="Part-time" {% if application.job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                                    <option value="Contract" {% if application.job_type == 'Contract' %}selected{% endif %}>Contract</option>
+                                    <option value="Internship" {% if application.job_type == 'Internship' %}selected{% endif %}>Internship</option>
+                                    <option value="Remote" {% if application.job_type == 'Remote' %}selected{% endif %}>Remote</option>
+                                    <option value="Hybrid" {% if application.job_type == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="salary_range" class="form-label">Salary Range</label>
+                                <input type="text" class="form-control" id="salary_range" name="salary_range" 
+                                       value="{{ application.salary_range or '' }}" placeholder="e.g., $80,000 - $100,000">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="job_url" class="form-label">Job Posting URL</label>
+                                <input type="url" class="form-control" id="job_url" name="job_url" 
+                                       value="{{ application.job_url or '' }}" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Contact & Follow-up -->
+                        <h5 class="mb-3"><i class="fas fa-user-tie me-2"></i>Contact & Follow-up</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_person" class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="contact_person" name="contact_person" 
+                                       value="{{ application.contact_person or '' }}" placeholder="Recruiter or Hiring Manager">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_email" class="form-label">Contact Email</label>
+                                <input type="email" class="form-control" id="contact_email" name="contact_email" 
+                                       value="{{ application.contact_email or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="follow_up_date" class="form-label">Follow-up Date</label>
+                            <input type="date" class="form-control" id="follow_up_date" name="follow_up_date" 
+                                   value="{{ application.follow_up_date.strftime('%Y-%m-%d') if application.follow_up_date else '' }}">
+                            <div class="form-text">Set a reminder to follow up on this application</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                      placeholder="Any additional notes about this application...">{{ application.notes or '' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ url_for('view_application', app_id=application.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

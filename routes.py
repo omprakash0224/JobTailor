@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, session, make_response
 from app import app, db
-from models import JobPosting, UserProfile, GeneratedContent
+from models import JobPosting, UserProfile, GeneratedContent, JobApplication
 from gemini_service import JobAssistantService
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -415,3 +415,208 @@ def download_content(content_id):
 def history():
     recent_content = GeneratedContent.query.order_by(GeneratedContent.created_at.desc()).limit(20).all()
     return render_template('history.html', content_list=recent_content)
+
+@app.route('/applications')
+def applications():
+    """View all job applications"""
+    profile = UserProfile.query.first()
+    
+    if not profile:
+        flash('Please create your profile first.', 'error')
+        return redirect(url_for('profile'))
+    
+    # Get filter parameters
+    status_filter = request.args.get('status', 'all')
+    sort_by = request.args.get('sort', 'date_desc')
+    
+    # Base query
+    query = JobApplication.query.filter_by(user_profile_id=profile.id)
+    
+    # Apply status filter
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+    
+    # Apply sorting
+    if sort_by == 'date_desc':
+        query = query.order_by(JobApplication.application_date.desc())
+    elif sort_by == 'date_asc':
+        query = query.order_by(JobApplication.application_date.asc())
+    elif sort_by == 'company':
+        query = query.join(JobPosting).order_by(JobPosting.company)
+    
+    applications = query.all()
+    
+    # Get statistics
+    total_apps = JobApplication.query.filter_by(user_profile_id=profile.id).count()
+    active_apps = JobApplication.query.filter_by(user_profile_id=profile.id).filter(
+        JobApplication.status.in_(['Applied', 'Phone Screen', 'Interview', 'Technical Round', 'Final Round'])
+    ).count()
+    offers = JobApplication.query.filter_by(user_profile_id=profile.id, status='Offer').count()
+    
+    return render_template('applications.html', 
+                         applications=applications,
+                         total_apps=total_apps,
+                         active_apps=active_apps,
+                         offers=offers,
+                         status_filter=status_filter,
+                         sort_by=sort_by)
+
+@app.route('/applications/add', methods=['GET', 'POST'])
+def add_application():
+    """Add a new job application"""
+    profile = UserProfile.query.first()
+    
+    if not profile:
+        flash('Please create your profile first.', 'error')
+        return redirect(url_for('profile'))
+    
+    if request.method == 'POST':
+        try:
+            # Check if job posting exists or create new one
+            job_id = request.form.get('job_id')
+            
+            if job_id:
+                job_posting = JobPosting.query.get(job_id)
+            else:
+                # Create new job posting
+                job_posting = JobPosting(
+                    title=request.form.get('job_title'),
+                    company=request.form.get('company'),
+                    description=request.form.get('job_description', '')
+                )
+                db.session.add(job_posting)
+                db.session.flush()  # Get the ID
+            
+            # Create application
+            application = JobApplication(
+                job_posting_id=job_posting.id,
+                user_profile_id=profile.id,
+                status=request.form.get('status', 'Applied'),
+                job_url=request.form.get('job_url'),
+                salary_range=request.form.get('salary_range'),
+                location=request.form.get('location'),
+                job_type=request.form.get('job_type'),
+                notes=request.form.get('notes'),
+                contact_person=request.form.get('contact_person'),
+                contact_email=request.form.get('contact_email')
+            )
+            
+            # Handle application date
+            app_date = request.form.get('application_date')
+            if app_date:
+                application.application_date = datetime.strptime(app_date, '%Y-%m-%d')
+            
+            # Handle follow-up date
+            follow_up = request.form.get('follow_up_date')
+            if follow_up:
+                application.follow_up_date = datetime.strptime(follow_up, '%Y-%m-%d')
+            
+            db.session.add(application)
+            db.session.commit()
+            
+            flash('Application added successfully!', 'success')
+            return redirect(url_for('applications'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error adding application: {e}")
+            flash(f'Error adding application: {str(e)}', 'error')
+    
+    # Get existing job postings for dropdown
+    jobs = JobPosting.query.order_by(JobPosting.created_at.desc()).limit(20).all()
+    
+    return render_template('add_application.html', jobs=jobs, profile=profile)
+
+@app.route('/applications/<int:app_id>')
+def view_application(app_id):
+    """View single application details"""
+    application = JobApplication.query.get_or_404(app_id)
+    
+    # Get related content
+    related_content = GeneratedContent.query.filter_by(
+        job_posting_id=application.job_posting_id
+    ).order_by(GeneratedContent.created_at.desc()).all()
+    
+    return render_template('view_application.html', 
+                         application=application,
+                         related_content=related_content)
+
+@app.route('/applications/<int:app_id>/edit', methods=['GET', 'POST'])
+def edit_application(app_id):
+    """Edit an existing application"""
+    application = JobApplication.query.get_or_404(app_id)
+    
+    if request.method == 'POST':
+        try:
+            application.status = request.form.get('status')
+            application.job_url = request.form.get('job_url')
+            application.salary_range = request.form.get('salary_range')
+            application.location = request.form.get('location')
+            application.job_type = request.form.get('job_type')
+            application.notes = request.form.get('notes')
+            application.contact_person = request.form.get('contact_person')
+            application.contact_email = request.form.get('contact_email')
+            
+            # Handle application date
+            app_date = request.form.get('application_date')
+            if app_date:
+                application.application_date = datetime.strptime(app_date, '%Y-%m-%d')
+            
+            # Handle follow-up date
+            follow_up = request.form.get('follow_up_date')
+            if follow_up:
+                application.follow_up_date = datetime.strptime(follow_up, '%Y-%m-%d')
+            else:
+                application.follow_up_date = None
+            
+            # Update job posting details
+            application.job_posting.title = request.form.get('job_title')
+            application.job_posting.company = request.form.get('company')
+            
+            db.session.commit()
+            
+            flash('Application updated successfully!', 'success')
+            return redirect(url_for('view_application', app_id=app_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error updating application: {e}")
+            flash(f'Error updating application: {str(e)}', 'error')
+    
+    return render_template('edit_application.html', application=application)
+
+@app.route('/applications/<int:app_id>/delete', methods=['POST'])
+def delete_application(app_id):
+    """Delete an application"""
+    try:
+        application = JobApplication.query.get_or_404(app_id)
+        db.session.delete(application)
+        db.session.commit()
+        
+        flash('Application deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error deleting application: {e}")
+        flash(f'Error deleting application: {str(e)}', 'error')
+    
+    return redirect(url_for('applications'))
+
+@app.route('/applications/<int:app_id>/quick-update', methods=['POST'])
+def quick_update_status(app_id):
+    """Quick update application status via AJAX"""
+    try:
+        application = JobApplication.query.get_or_404(app_id)
+        new_status = request.form.get('status')
+        
+        if new_status:
+            application.status = new_status
+            db.session.commit()
+            
+            return {'success': True, 'message': 'Status updated'}
+        else:
+            return {'success': False, 'message': 'Invalid status'}, 400
+            
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error updating status: {e}")
+        return {'success': False, 'message': str(e)}, 500

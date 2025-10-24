@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-alt me-2"></i>Application Details</h2>
+        <div>
+            <a href="{{ url_for('applications') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+            <a href="{{ url_for('edit_application', app_id=application.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-2"></i>Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Job Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Job Information</h5>
+                </div>
+                <div class="card-body">
+                    <h4>{{ application.job_posting.title }}</h4>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-building me-2"></i>{{ application.job_posting.company }}
+                    </p>
+                    
+                    <div class="row">
+                        {% if application.location %}
+                        <div class="col-md-6 mb-2">
+                            <strong><i class="fas fa-map-marker-alt me-2"></i>Location:</strong>
+                            {{ application.location }}
+                        </div>
+                        {% endif %}
+                        {% if application.job_type %}
+                        <div class="col-md-6 mb-2">
+                            <strong><i class="fas fa-briefcase me-2"></i>Type:</strong>
+                            {{ application.job_type }}
+                        </div>
+                        {% endif %}
+                        {% if application.salary_range %}
+                        <div class="col-md-6 mb-2">
+                            <strong><i class="fas fa-dollar-sign me-2"></i>Salary:</strong>
+                            {{ application.salary_range }}
+                        </div>
+                        {% endif %}
+                        {% if application.job_url %}
+                        <div class="col-md-12 mb-2">
+                            <strong><i class="fas fa-link me-2"></i>Job Posting:</strong>
+                            <a href="{{ application.job_url }}" target="_blank">View Original Posting <i class="fas fa-external-link-alt ms-1"></i></a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if application.job_posting.description %}
+                    <hr>
+                    <h6>Job Description</h6>
+                    <p class="text-muted">{{ application.job_posting.description[:500] }}{% if application.job_posting.description|length > 500 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Application Timeline -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Application Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6>Application Submitted</h6>
+                                <p class="text-muted mb-0">{{ application.application_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            </div>
+                        </div>
+                        {% if application.status != 'Applied' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-{{ application.status_color }}"></div>
+                            <div class="timeline-content">
+                                <h6>Status: {{ application.status }}</h6>
+                                <p class="text-muted mb-0">{{ application.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if application.notes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Notes</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ application.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Related Content -->
+            {% if related_content %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-folder me-2"></i>Related Generated Content</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for content in related_content %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ content.content_type|replace('_', ' ')|title }}</h6>
+                                    <small class="text-muted">Generated on {{ content.created_at.strftime('%b %d, %Y') }}</small>
+                                </div>
+                                <a href="{{ url_for('download_content', content_id=content.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Status</h5>
+                </div>
+                <div class="card-body text-center">
+                    <span class="badge bg-{{ application.status_color }} fs-5 px-4 py-2">{{ application.status }}</span>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            {% if application.contact_person or application.contact_email %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Contact</h5>
+                </div>
+                <div class="card-body">
+                    {% if application.contact_person %}
+                    <p class="mb-2">
+                        <strong>Name:</strong><br>
+                        {{ application.contact_person }}
+                    </p>
+                    {% endif %}
+                    {% if application.contact_email %}
+                    <p class="mb-0">
+                        <strong>Email:</strong><br>
+                        <a href="mailto:{{ application.contact_email }}">{{ application.contact_email }}</a>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Follow-up Reminder -->
+            {% if application.follow_up_date %}
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Follow-up Reminder</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        {{ application.follow_up_date.strftime('%B %d, %Y') }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('customize_resume', job_id=application.job_posting_id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-file-alt me-2"></i>Customize Resume
+                        </a>
+                        <a href="{{ url_for('generate_cover_letter', job_id=application.job_posting_id) }}" class="btn btn-outline-info">
+                            <i class="fas fa-envelope me-2"></i>Generate Cover Letter
+                        </a>
+                        <a href="{{ url_for('interview_prep', job_id=application.job_posting_id) }}" class="btn btn-outline-warning">
+                            <i class="fas fa-question-circle me-2"></i>Interview Prep
+                        </a>
+                        <hr>
+                        <form method="POST" action="{{ url_for('delete_application', app_id=application.id) }}" onsubmit="return confirm('Are you sure you want to delete this application?');">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-trash me-2"></i>Delete Application
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 8px;
+    bottom: -12px;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item:last-child::before {
+    display: none;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -29px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid white;
+}
+
+.timeline-content {
+    padding-left: 10px;
+}
+</style>
+{% endblock %}
