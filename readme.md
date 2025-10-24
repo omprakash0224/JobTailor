@@ -63,9 +63,14 @@ Preferred communication style: Simple, everyday language.
 - **PostgreSQL**: Recommended for production (configurable via DATABASE_URL)
 - **Migration support**: SQLAlchemy's create_all() for schema initialization
 
+## License
+
+This project is licensed under a Non-Commercial License. You may use, modify, and share this code for personal and educational purposes, but commercial use and resale are prohibited. See the [LICENSE](LICENSE) file for details.
+
+For commercial licensing inquiries, please contact:- omprakashsamal75@gmail.com
+
 ### Demo 
 
+https://github.com/user-attachments/assets/be057338-b343-4a3e-8c9c-2af56b2f42de
 
-
-https://github.com/user-attachments/assets/f17dfe40-65a8-466b-ab1d-c62bb7754bb7
 
